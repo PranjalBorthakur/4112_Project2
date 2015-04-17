@@ -63,23 +63,50 @@ public class Application {
     // finds the optimal plan for the given selectivity and config
     private static void findOptimalPlan(float selectivity[], int r, int t, int l, int m, int a, int f,
                                         Comparator<Set<Integer>> comparator) {
-        int k = selectivity.length;
-        Map<Set<Integer>, Record> A = new TreeMap<Set<Integer>, Record>(comparator);
-        for(int i = 1; i <= k; i++) {
-            populateArray(A, k, i, 0, new HashSet<Integer>(), 0);
+        Map<Set<Integer>, Record> A = getArray(selectivity, comparator);
+
+        for(Map.Entry<Set<Integer>, Record> s: A.entrySet()) {
+            for (Map.Entry<Set<Integer>, Record> sDash : A.entrySet()) {
+                if(!Collections.disjoint(s.getKey(), sDash.getKey())) {
+                    continue;
+                }
+                // check first lemma
+                // check second lemma
+                // recompute
+            }
         }
+    }
+
+    private static Map<Set<Integer>, Record> getArray(float[] selectivity, Comparator<Set<Integer>> comparator) {
+        Map<Set<Integer>, Record> A =  new TreeMap<Set<Integer>, Record>(comparator);
+
+        // populate sets in array
+        for(int i = 1; i <= selectivity.length; i++) {
+            populateArray(A, selectivity.length, i, 0, new HashSet<Integer>(), 0);
+        }
+
+        // initialize each record in the array
         for(Map.Entry<Set<Integer>, Record> entry: A.entrySet()) {
-            initializeRecord(entry.getValue());
+            initializeRecord(entry.getValue(), selectivity);
             System.out.println(entry.getKey());
         }
+        return A;
     }
 
-    private static void initializeRecord(Record record) {
-
+    private static void initializeRecord(Record record, float selectivity[]) {
+        Set<Integer> terms = record.getTerms();
+        //initialize P value
+        Double p = 1.0;
+        for(Integer i: terms) {
+            p = p*selectivity[i];
+        }
+        record.setP(p);
+        //TODO: incomplete
     }
 
-    // creates all 2^k - 1 combinations and populate them in order in TreeMap A
-    private static void populateArray(Map<Set<Integer>, Record> A, int k, int requiredSize, int index, Set<Integer> result, int len) {
+    // creates all ^kC_{requireSize} combinations and populate them in order in TreeMap A
+    private static void populateArray(Map<Set<Integer>, Record> A, int k, int requiredSize, int index,
+                                      Set<Integer> result, int len) {
         if(len == requiredSize) {
             A.put(result, new Record(result));
             return;
