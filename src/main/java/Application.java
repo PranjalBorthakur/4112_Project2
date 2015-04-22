@@ -74,9 +74,6 @@ public class Application {
                 // checks for the lemma conditions
                 Record E1 = sDash.getValue();
                 Record E2 = s.getValue();
-//                System.out.println(s);
-//                System.out.println(sDash);
-//                System.out.println("");
                 if(isFirstLemma(A, E1, E2) || isSecondLemma(A, E1, E2)) {
                     continue;
                 }
@@ -95,6 +92,7 @@ public class Application {
         return A;
     }
 
+    // print optimal plan for the given selectivity
     private static void printOptimalPlan(Map<Set<Integer>, Record> A, int k, float selectivity[]) {
         Set<Integer> finalKey = new HashSet<Integer>();
         StringBuilder result = new StringBuilder();
@@ -217,10 +215,10 @@ public class Application {
         return false;
     }
 
+    // initializes A array for the algorithm as a map
     private static Map<Set<Integer>, Record> getArray(float[] selectivity, Comparator<Set<Integer>> comparator,
                                                       int r, int t, int l, int m, int a, int f) {
         Map<Set<Integer>, Record> A =  new TreeMap<Set<Integer>, Record>(comparator);
-//        Map<Set<Integer>, Record> A =  new TreeMap<Set<Integer>, Record>();
 
         // populate sets in array
         for(int i = 1; i <= selectivity.length; i++) {
@@ -234,6 +232,7 @@ public class Application {
         return A;
     }
 
+    // initializes record for each term
     private static void initializeRecord(Record record, float selectivity[], int r, int t, int l, int m, int a, int f) {
         Set<Integer> terms = record.getTerms();
         int k = terms.size();
@@ -243,7 +242,7 @@ public class Application {
             p = p*selectivity[i];
         }
         record.setP(p);
-        // calculate cost and whether branch
+        // calculate all costs and whether branch
         Double q = Math.min(p, 1-p);
         Double cost1 = k*r + (k-1)*l + k*f + t + m*q + p*a;
         Double cost2 = (double) (k*r + (k-1)*l + k*f + a);
