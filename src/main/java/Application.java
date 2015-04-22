@@ -5,7 +5,6 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 
 public class Application {
@@ -52,56 +51,199 @@ public class Application {
             String line = in.nextLine();
             String[] splits = line.split("\\s+");
             int k = splits.length;
-            float selectivity[] = new float[k];
+            float selectivity[] = new float[k+1];
             for(int i = 0; i < k; i++) {
-                selectivity[i] = Float.valueOf(splits[i]);
+                selectivity[i+1] = Float.valueOf(splits[i]);
             }
-            findOptimalPlan(selectivity, r, t, l, m, a, f, comparator);
+            Map<Set<Integer>, Record> A = findOptimalPlan(selectivity, r, t, l, m, a, f, comparator);
+            printOptimalPlan(A, k);
         }
     }
 
     // finds the optimal plan for the given selectivity and config
-    private static void findOptimalPlan(float selectivity[], int r, int t, int l, int m, int a, int f,
-                                        Comparator<Set<Integer>> comparator) {
-        Map<Set<Integer>, Record> A = getArray(selectivity, comparator);
+    private static Map<Set<Integer>, Record> findOptimalPlan(float selectivity[], int r, int t, int l, int m, int a,
+                                                             int f, Comparator<Set<Integer>> comparator) {
+        Map<Set<Integer>, Record> A = getArray(selectivity, comparator, r, t, l, m, a, f);
 
         for(Map.Entry<Set<Integer>, Record> s: A.entrySet()) {
             for (Map.Entry<Set<Integer>, Record> sDash : A.entrySet()) {
+                // checks if the sets are disjoint
                 if(!Collections.disjoint(s.getKey(), sDash.getKey())) {
                     continue;
                 }
-                // check first lemma
-                // check second lemma
+                // checks for the lemma conditions
+                Record E1 = sDash.getValue();
+                Record E2 = s.getValue();
+//                System.out.println(s);
+//                System.out.println(sDash);
+//                System.out.println("");
+                if(isFirstLemma(A, E1, E2) || isSecondLemma(A, E1, E2)) {
+                    continue;
+                }
                 // recompute
+                Double newCost = calculateNewCost(E1, E2, m);
+                Set<Integer> union = new HashSet<Integer>(s.getKey());
+                union.addAll(sDash.getKey());
+                Record record = A.get(union);
+                if(newCost < record.getCost()) {
+                    record.setCost(newCost);
+                    record.setL(sDash.getKey());
+                    record.setR(s.getKey());
+                }
             }
-        }
-    }
-
-    private static Map<Set<Integer>, Record> getArray(float[] selectivity, Comparator<Set<Integer>> comparator) {
-        Map<Set<Integer>, Record> A =  new TreeMap<Set<Integer>, Record>(comparator);
-
-        // populate sets in array
-        for(int i = 1; i <= selectivity.length; i++) {
-            populateArray(A, selectivity.length, i, 0, new HashSet<Integer>(), 0);
-        }
-
-        // initialize each record in the array
-        for(Map.Entry<Set<Integer>, Record> entry: A.entrySet()) {
-            initializeRecord(entry.getValue(), selectivity);
-            System.out.println(entry.getKey());
         }
         return A;
     }
 
-    private static void initializeRecord(Record record, float selectivity[]) {
+    private static void printOptimalPlan(Map<Set<Integer>, Record> A, int k) {
+        Set<Integer> finalKey = new HashSet<Integer>();
+        for(int i = 1; i <= k; i++) {
+            finalKey.add(i);
+        }
+        StringBuilder result = new StringBuilder();
+        int closeBracketCount = 0;
+        result.append("if(");
+        closeBracketCount++;
+        Record record = A.get(finalKey);
+        boolean first = true;
+        while(record != null) {
+            if(record.getL() != null) {
+                if(!first) {
+                    result.append(" && (");
+                    closeBracketCount++;
+                }
+                result.append(getLogicalAndString(record.getL()));
+                record = A.get(record.getR());
+            } else {
+                if(!record.isB()) {
+                    result.append(getLogicalAndString(record.getTerms()));
+                }
+                for(int i = 0; i < closeBracketCount; i++) {
+                    result.append(")");
+                }
+                result.append(" { \n");
+                if(record.isB()) {
+                    result.append("    answer[j] = i; \n");
+                    result.append("    j += ");
+                    result.append(getLogicalAndString(record.getTerms()));
+                    result.append("; \n");
+                } else {
+                    result.append("    answer[j++] = i; \n");
+                }
+                result.append("}");
+                record = null;
+            }
+            if(first) {
+                first = false;
+            }
+        }
+        System.out.println(result.toString());
+    }
+
+    private static String getLogicalAndString(Set<Integer> set) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(");
+        Iterator<Integer> iter = set.iterator();
+        int val;
+        while(iter.hasNext()) {
+            val = iter.next();
+            builder.append("t");
+            builder.append(val);
+            builder.append("[o");
+            builder.append(val);
+            builder.append("[i]]");
+            if(iter.hasNext()) {
+                builder.append(" & ");
+            }
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+    private static Double calculateNewCost(Record E, Record E1, int m) {
+        Double cost = 0.0;
+        cost += E.getFCost();
+        cost += m * Math.min(E.getP(), 1-E.getP());
+        cost += E.getP() * E1.getCost();
+        return cost;
+    }
+
+    // returns if first lemma holds true. If holds true, plan cannot be optimal
+    private static boolean isFirstLemma(Map<Set<Integer>, Record> A, Record E1, Record E2) {
+        if(E2.getL() != null) {
+            E2 = A.get(E2.getL());
+        }
+        if(E2.getP() <= E1.getP()) {
+            if(E2.cCost < E1.cCost) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // returns if second lemma holds true. If holds true, plan cannot be optimal
+    private static boolean isSecondLemma(Map<Set<Integer>, Record> A, Record E1, Record E2) {
+        if(E1.getP() > 0.5) {
+            return false;
+        }
+        Record tmp;
+        while(E2 != null) {
+            if(E2.getL() != null) {
+                tmp = A.get(E2.getL());
+            } else {
+                tmp = E2;
+            }
+            if(tmp.getP() < E1.getP()) {
+                if(tmp.getFCost() < E1.getFCost()) {
+                    return true;
+                }
+            }
+            E2 = A.get(E2.getR());
+        }
+        return false;
+    }
+
+    private static Map<Set<Integer>, Record> getArray(float[] selectivity, Comparator<Set<Integer>> comparator,
+                                                      int r, int t, int l, int m, int a, int f) {
+        Map<Set<Integer>, Record> A =  new TreeMap<Set<Integer>, Record>(comparator);
+//        Map<Set<Integer>, Record> A =  new TreeMap<Set<Integer>, Record>();
+
+        // populate sets in array
+        for(int i = 1; i <= selectivity.length; i++) {
+            populateArray(A, selectivity.length, i, 1, new HashSet<Integer>(), 0);
+        }
+
+        // initialize each record in the array
+        for(Map.Entry<Set<Integer>, Record> entry: A.entrySet()) {
+            initializeRecord(entry.getValue(), selectivity, r, t, l, m, a, f);
+        }
+        return A;
+    }
+
+    private static void initializeRecord(Record record, float selectivity[], int r, int t, int l, int m, int a, int f) {
         Set<Integer> terms = record.getTerms();
+        int k = terms.size();
         //initialize P value
         Double p = 1.0;
         for(Integer i: terms) {
             p = p*selectivity[i];
         }
         record.setP(p);
-        //TODO: incomplete
+        // calculate cost and whether branch
+        Double q = Math.min(p, 1-p);
+        Double cost1 = k*r + (k-1)*l + k*f + t + m*q + p*a;
+        Double cost2 = (double) (k*r + (k-1)*l + k*f + a);
+        if(cost1 < cost2) {
+            record.setCost(cost1);
+            record.setB(false);
+        } else {
+            record.setCost(cost2);
+            record.setB(true);
+        }
+        Double fCost = (double) (k * r + (k - 1) * l + k * f + t);
+        record.setFCost(fCost);
+        Double cCost = (p-1)/fCost;
+        record.setCCost(cCost);
     }
 
     // creates all ^kC_{requireSize} combinations and populate them in order in TreeMap A
@@ -135,7 +277,27 @@ public class Application {
                 if(o1.equals(o2)) {
                     return 0;
                 } else {
-                    return 1;
+                    if(o1.size() == o2.size()) {
+                        Iterator<Integer> iter1 = o1.iterator();
+                        Iterator<Integer> iter2 = o2.iterator();
+                        if (iter1.hasNext() && iter2.hasNext()) {
+                            int int1 = iter1.next();
+                            int int2 = iter2.next();
+                            if (int1 < int2) {
+                                return -1;
+                            }
+                            if (int1 > int2) {
+                                return 1;
+                            }
+                        }
+                    } else {
+                        if(o1.size() < o2.size()) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                    return 0;
                 }
             }
         };

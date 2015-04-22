@@ -8,24 +8,30 @@ public class Record {
 
     Set<Integer> terms;
     Double p;
+    // no branch implies b = true
     boolean b;
     Double cost;
-    Record L;
-    Record R;
+    Double fCost;
+    Double cCost;
+    Set<Integer> L;
+    Set<Integer> R;
 
     public Record() {
-        this(new HashSet<Integer>(), 0.0, false, 0.0, null, null);
+        this(new HashSet<Integer>(), 0.0, false, 0.0, 0.0, 0.0, null, null);
     }
 
     public Record(Set<Integer> terms) {
-        this(terms, 0.0, false, 0.0, null, null);
+        this(terms, 0.0, false, 0.0, 0.0, 0.0, null, null);
     }
 
-    public Record(Set<Integer> terms, Double p, boolean b, Double cost, Record l, Record r) {
+    public Record(Set<Integer> terms, Double p, boolean b, Double cost, Double fCost, Double cCost,
+                  Set<Integer> l, Set<Integer> r) {
         this.terms = terms;
         this.p = p;
         this.b = b;
         this.cost = cost;
+        this.fCost = fCost;
+        this.cCost = cCost;
         L = l;
         R = r;
     }
@@ -62,19 +68,35 @@ public class Record {
         this.cost = cost;
     }
 
-    public Record getL() {
+    public Double getFCost() {
+        return fCost;
+    }
+
+    public void setFCost(Double fCost) {
+        this.fCost = fCost;
+    }
+
+    public Double getCCost() {
+        return fCost;
+    }
+
+    public void setCCost(Double fCost) {
+        this.fCost = fCost;
+    }
+
+    public Set<Integer> getL() {
         return L;
     }
 
-    public void setL(Record l) {
+    public void setL(Set<Integer> l) {
         L = l;
     }
 
-    public Record getR() {
+    public Set<Integer> getR() {
         return R;
     }
 
-    public void setR(Record r) {
+    public void setR(Set<Integer> r) {
         R = r;
     }
 }
