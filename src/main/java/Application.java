@@ -105,6 +105,7 @@ public class Application {
         result.append("if(");
         closeBracketCount++;
         Record record = A.get(finalKey);
+        System.out.println(record.getCost());
         boolean first = true;
         while(record != null) {
             if(record.getL() != null) {
@@ -280,7 +281,7 @@ public class Application {
                     if(o1.size() == o2.size()) {
                         Iterator<Integer> iter1 = o1.iterator();
                         Iterator<Integer> iter2 = o2.iterator();
-                        if (iter1.hasNext() && iter2.hasNext()) {
+                        while (iter1.hasNext() && iter2.hasNext()) {
                             int int1 = iter1.next();
                             int int2 = iter2.next();
                             if (int1 < int2) {

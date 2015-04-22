@@ -77,11 +77,11 @@ public class Record {
     }
 
     public Double getCCost() {
-        return fCost;
+        return cCost;
     }
 
-    public void setCCost(Double fCost) {
-        this.fCost = fCost;
+    public void setCCost(Double cCost) {
+        this.cCost = cCost;
     }
 
     public Set<Integer> getL() {
