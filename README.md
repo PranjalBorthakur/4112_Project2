@@ -1,5 +1,6 @@
 #Uni
 nj2303 - Naman Jain
+
 rg2930 - Rahul Gaur
 
 #Selection Conditions in Main Memory
@@ -25,6 +26,7 @@ At the end of the algorithm, A[S].c contains the optimal cost, and its correspon
 The Entire Algorithm description can be found at: http://www.cs.columbia.edu/~kar/pubsk/selcondsTODS.pdf 
 
 The following is the structure of Application.java which contains the implementation of the Algorithm:
+
 1. The code starts from main function which takes path to query file and config file as input respectively.
 2. For each case in query file, it parses the selectivity, finds the optimal plan and print it.
 3. It uses a TreeMap where its key is subset of basic terms (implemented as hashmap) and its value is an object that contains all the necessary information (refer to Record.java)
