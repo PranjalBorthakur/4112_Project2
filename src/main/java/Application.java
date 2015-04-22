@@ -5,6 +5,7 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.*;
 
 public class Application {
@@ -45,6 +46,15 @@ public class Application {
             System.exit(3);
         }
 
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("output.txt", "UTF-8");
+        } catch (Exception e) {
+            System.out.println("Error writing to output file: output.txt");
+            e.printStackTrace();
+            System.exit(4);
+        }
+
         Comparator<Set<Integer>> comparator = getComparator();
         // parse queries and call DP algorithm
         while(in.hasNext()) {
@@ -56,8 +66,10 @@ public class Application {
                 selectivity[i+1] = Float.valueOf(splits[i]);
             }
             Map<Set<Integer>, Record> A = findOptimalPlan(selectivity, r, t, l, m, a, f, comparator);
-            printOptimalPlan(A, k, selectivity);
+            writer.println(printOptimalPlan(A, k, selectivity));
         }
+
+        writer.close();
     }
 
     // finds the optimal plan for the given selectivity and config
@@ -93,7 +105,7 @@ public class Application {
     }
 
     // print optimal plan for the given selectivity
-    private static void printOptimalPlan(Map<Set<Integer>, Record> A, int k, float selectivity[]) {
+    private static String printOptimalPlan(Map<Set<Integer>, Record> A, int k, float selectivity[]) {
         Set<Integer> finalKey = new HashSet<Integer>();
         StringBuilder result = new StringBuilder();
         result.append("================================================================== \n");
@@ -149,7 +161,7 @@ public class Application {
         result.append("------------------------------------------------------------------ \n");
         result.append("cost: ");
         result.append(finalCost);
-        System.out.println(result.toString());
+        return result.toString();
     }
 
     private static String getLogicalAndString(Set<Integer> set) {
