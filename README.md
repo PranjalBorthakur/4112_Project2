@@ -3,6 +3,10 @@ nj2303 - Naman Jain
 
 rg2930 - Rahul Gaur
 
+# How to Run
+
+Go to the folder where you cloned the git repo. Run the command "mvn clean install". It will generate a target folder with the jar for the application. The jar is named as 'dbsi-project2-1.0-SNAPSHOT.jar'. You need to run the jar with 2 arguments, path to query.txt and config.txt respectively. You can run the following command after going to target folder: 'java -jar dbsi-project2-1.0-SNAPSHOT.jar ../src/main/resources/query.txt ../src/main/resources/config.txt'
+
 #Selection Conditions in Main Memory
 
 In this project we have implemented a query optimization algorithm for a class of queries over an in-memory database.
