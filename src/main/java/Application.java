@@ -56,7 +56,7 @@ public class Application {
                 selectivity[i+1] = Float.valueOf(splits[i]);
             }
             Map<Set<Integer>, Record> A = findOptimalPlan(selectivity, r, t, l, m, a, f, comparator);
-            printOptimalPlan(A, k);
+            printOptimalPlan(A, k, selectivity);
         }
     }
 
@@ -95,21 +95,27 @@ public class Application {
         return A;
     }
 
-    private static void printOptimalPlan(Map<Set<Integer>, Record> A, int k) {
+    private static void printOptimalPlan(Map<Set<Integer>, Record> A, int k, float selectivity[]) {
         Set<Integer> finalKey = new HashSet<Integer>();
+        StringBuilder result = new StringBuilder();
+        result.append("================================================================== \n");
         for(int i = 1; i <= k; i++) {
             finalKey.add(i);
+            result.append(selectivity[i]);
+            result.append(" ");
         }
-        StringBuilder result = new StringBuilder();
+        result.append("\n");
+        result.append("------------------------------------------------------------------ \n");
         int closeBracketCount = 0;
-        result.append("if(");
-        closeBracketCount++;
         Record record = A.get(finalKey);
-        System.out.println(record.getCost());
+        Double finalCost = record.getCost();
         boolean first = true;
         while(record != null) {
             if(record.getL() != null) {
-                if(!first) {
+                if(first) {
+                    result.append("if(");
+                    closeBracketCount++;
+                } else {
                     result.append(" && (");
                     closeBracketCount++;
                 }
@@ -122,7 +128,9 @@ public class Application {
                 for(int i = 0; i < closeBracketCount; i++) {
                     result.append(")");
                 }
-                result.append(" { \n");
+                if(closeBracketCount != 0) {
+                    result.append(" { \n");
+                }
                 if(record.isB()) {
                     result.append("    answer[j] = i; \n");
                     result.append("    j += ");
@@ -131,13 +139,18 @@ public class Application {
                 } else {
                     result.append("    answer[j++] = i; \n");
                 }
-                result.append("}");
+                if(closeBracketCount != 0) {
+                    result.append("} \n");
+                }
                 record = null;
             }
             if(first) {
                 first = false;
             }
         }
+        result.append("------------------------------------------------------------------ \n");
+        result.append("cost: ");
+        result.append(finalCost);
         System.out.println(result.toString());
     }
 
