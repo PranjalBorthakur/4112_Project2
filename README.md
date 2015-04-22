@@ -20,7 +20,9 @@ At the end of the algorithm, A[S].c contains the optimal cost, and its correspon
 
 The Entire Algorithm description can be found at: http://www.cs.columbia.edu/~kar/pubsk/selcondsTODS.pdf 
 
-The following is the code structure:
+The following is the structure of Application.java which contains the implementation of the Algorithm:
+
+
 
 
 
